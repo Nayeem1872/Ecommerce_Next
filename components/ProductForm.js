@@ -5,19 +5,21 @@ import { useRouter } from "next/router";
 
 export default function ProductForm({
   _id,
-  title: existingTitile,
+  title: existingTitle,
   price: existingPrice,
   description: existingDescription,
-  images,
+  images: existingImages,
 }) {
-  const [title, setTitle] = useState(existingTitile || "");
+  const [title, setTitle] = useState(existingTitle || "");
   const [description, setDescription] = useState(existingDescription || "");
   const [price, setPrice] = useState(existingPrice || "");
+  const [images, setImages] = useState(existingImages && existingImages.filter(image => image !== null && image !== undefined) || []);
+
   const [goToProduct, setGoToProducts] = useState(false);
   const router = useRouter();
   async function saveProduct(ev) {
     ev.preventDefault();
-    const data = { title, description, price };
+    const data = { title, description, price, images: images.filter((image) => image !== null && image !== undefined).map((image) => image.url), };
     if (_id) {
       //update
         await axios.put('/api/products',{...data,_id})
@@ -27,7 +29,7 @@ export default function ProductForm({
     } else {
       //create
       
-          await axios.post("/api/products", data);
+          await axios.post('/api/products', data);
         }
         setGoToProducts(true);
   }
@@ -43,11 +45,11 @@ async function uploadImage(ev){
         data.append('file',file);
     }
     
-    const res = await fetch ('/api/upload',{
-        method:'POST',
-        body:data,
-    })
-    console.log(res.data)
+    const res = await axios.post ('/api/upload',data);
+    setImages(oldImages=>{
+      return [...oldImages, ...res.data.links]
+    });
+    
    } 
 
 
@@ -72,8 +74,17 @@ async function uploadImage(ev){
         onChange={(ev) => setPrice(ev.target.value)}
       />
       <label>Photos</label>
-      <div className="mb-2">
-        <label className="w-24 h-24 border text-center flex flex-col rounded-lg bg-blue-200 items-center justify-center cursor-pointer">
+      <div className="mb-2 flex flex-wrap gap-2">
+
+      {images?.length && images.map((image) => (
+  image?.url && (
+    <div key={image._id} className="h-24">
+      <img src={image.url} alt="" className="rounded-lg" />
+    </div>
+  )
+))}
+
+        <label className=" w-24 h-24 border text-center flex flex-col rounded-lg bg-blue-200 items-center justify-center cursor-pointer">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
   <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
 </svg>
