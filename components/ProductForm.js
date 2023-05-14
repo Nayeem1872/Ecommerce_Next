@@ -2,6 +2,8 @@ import { useState } from "react";
 import axios from "axios";
 
 import { useRouter } from "next/router";
+import Spinner from "./Spinner";
+import { ReactSortable } from "react-sortablejs";
 
 export default function ProductForm({
   _id,
@@ -13,49 +15,52 @@ export default function ProductForm({
   const [title, setTitle] = useState(existingTitle || "");
   const [description, setDescription] = useState(existingDescription || "");
   const [price, setPrice] = useState(existingPrice || "");
-  const [images, setImages] = useState(existingImages && existingImages.filter(image => image !== null && image !== undefined) || []);
+  const [images,setImages] = useState(existingImages || []);
+  const [isUploading, setIsUploading] = useState (false)
 
   const [goToProduct, setGoToProducts] = useState(false);
   const router = useRouter();
   async function saveProduct(ev) {
     ev.preventDefault();
-    const data = { title, description, price, images: images.filter((image) => image !== null && image !== undefined).map((image) => image.url), };
+    const data = {
+      title,description,price,images
+    };
     if (_id) {
       //update
-        await axios.put('/api/products',{...data,_id})
-
-
-
+      await axios.put('/api/products', {...data,_id});
     } else {
       //create
-      
-          await axios.post('/api/products', data);
-        }
-        setGoToProducts(true);
+      await axios.post('/api/products', data);
+    }
+    setGoToProducts(true);
   }
   if (goToProduct) {
-    router.push("/Products");
+    router.push('/Products');
   }
-
-async function uploadImage(ev){
-   const files = ev.target?.files;
-   if(files?.length > 0){
-    const data = new FormData()
-    for (const file of files){
-        data.append('file',file);
+  async function uploadImages(ev) {
+    const files = ev.target?.files;
+    if (files?.length > 0) {
+      setIsUploading(true);
+      const data = new FormData();
+      for (const file of files) {
+        data.append('file', file);
+      }
+      const res = await axios.post('/api/upload', data);
+      
+      setImages(oldImages => {
+        return [...oldImages, ...res.data.links];
+      });
+      setIsUploading(false);
     }
-    
-    const res = await axios.post ('/api/upload',data);
-    setImages(oldImages=>{
-      return [...oldImages, ...res.data.links]
-    });
-    
-   } 
-
-
+  }
+ 
+function updateImageOrder(imagess){
+  console.log(imagess)
+  setImages(imagess);
+  
 }
 
-
+// console.log (setImages)
 
   return (
     <form onSubmit={saveProduct}>
@@ -74,27 +79,35 @@ async function uploadImage(ev){
         onChange={(ev) => setPrice(ev.target.value)}
       />
       <label>Photos</label>
-      <div className="mb-2 flex flex-wrap gap-2">
-
-      {images?.length && images.map((image) => (
-  image?.url && (
-    <div key={image._id} className="h-24">
-      <img src={image.url} alt="" className="rounded-lg" />
-    </div>
-  )
-))}
-
-        <label className=" w-24 h-24 border text-center flex flex-col rounded-lg bg-blue-200 items-center justify-center cursor-pointer">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-  <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-</svg>
-Upload
-<input type="file" onChange={uploadImage} className="hidden" />
-</label>
+      <div className="mb-1 flex flex-wrap gap-1">
+  <ReactSortable
+    list={images}
+    className="flex flex-wrap gap-1"
+    setList={updateImageOrder}
+  >
+    {!!images?.length && images.map(link => (
+      <div key={link} className="h-24">
+        <img src={link} alt="" className="rounded-lg" />
       </div>
-      {!images?.length && (
-        <div>No Photos found</div>
-      )}
+    ))}
+  </ReactSortable>
+  {isUploading && (
+    <div className="h-24 flex items-center">
+      <Spinner />
+    </div>
+  )}
+  <label className="w-24 h-24 cursor-pointer text-center flex flex-col items-center justify-center text-sm gap-1 text-primary rounded-sm bg-white shadow-sm border border-primary">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+    </svg>
+    <div>
+      Add image
+    </div>
+    <input type="file" onChange={uploadImages} className="hidden" />
+  </label>
+</div>
+
+
       <label>Description</label>
       <textarea
         placeholder="description"

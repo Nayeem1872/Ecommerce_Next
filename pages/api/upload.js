@@ -2,9 +2,11 @@ import multiparty from 'multiparty';
 import cloudinary from 'cloudinary';
 import fs from 'fs';
 import mime from 'mime-types'
+import {mongooseConnect} from "@/lib/mongoose";
 
 
 export default async function handle (req,res){
+    await mongooseConnect();
 
     const form = new multiparty.Form();
     const {fields,files} = await new Promise((resolve,reject)=>{
@@ -30,10 +32,11 @@ export default async function handle (req,res){
             ContentType: mime.lookup(file.path)
 
         });
-        const link = { url: result.url }
+        const link =  result.url 
        links.push(link)
 
         console.log(result);
+        console.log('Link:', links);
       }
    
    
@@ -43,5 +46,5 @@ export default async function handle (req,res){
 
 }
 export const config = {
-    api:{bodyParser: false}
+    api: {bodyParser: false},
 }

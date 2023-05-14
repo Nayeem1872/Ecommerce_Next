@@ -35,7 +35,7 @@ axios.get('/api/products').then (response=>{
     </thead>
     <tbody>
         {products.map(product =>(
-            <tr>
+            <tr key={product._id}>
                 <td>{product.title}</td>
                 <td>
                 <Link href={'/Products/edit/'+product._id}>
