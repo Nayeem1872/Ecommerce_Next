@@ -9,6 +9,7 @@ function Categories({swal}){
   const [name, setName] = useState("");
   const [parentCategory, setParentCategory] = useState("");
   const [categories, setCategories] = useState([]);
+  const [properties,setProperties] = useState([])
 
   useEffect(() => {
     fetchCat();
@@ -58,6 +59,35 @@ function Categories({swal}){
       }
     })
   }
+  function addProperty(){
+    setProperties(prev=>{
+      return [...prev,{name:'', values:''}]
+    })
+  }
+  function handlePropertyNameChange (index,property,newName){
+    setProperties(prev=>{
+      const properties = [...prev];
+      properties[index].name = newName;
+      return properties
+    })
+
+  }
+  function handlePropertyvaluesChange (index,property,newvalues){
+    setProperties(prev=>{
+      const properties = [...prev];
+      properties[index].values = newvalues;
+      return properties
+    })
+
+  }
+  function removeProperty (index){
+    setProperties (prev=>{
+      return [...prev].filter((p,pIndex)=>{
+        return pIndex !== index;
+      })
+    })
+  }
+
 
   return (
     <Layout>
@@ -65,16 +95,18 @@ function Categories({swal}){
       <label>
   {editCat ? `Edit Category ${editCat.name}` : 'Add New Category'}
 </label>
-      <form onSubmit={saveCat} className="flex gap-1">
+      <form onSubmit={saveCat} className="">
+
+        <div className="flex gap-1">
         <input
-          className="mb-0"
+          className=""
           type="text"
           value={name}
           onChange={(ev) => setName(ev.target.value)}
           placeholder={"Category Name"}
         />
         <select
-          className="mb-0"
+          className=""
           value={parentCategory}
           onChange={(ev) => setParentCategory(ev.target.value)}
         >
@@ -84,6 +116,42 @@ function Categories({swal}){
               <option value={category._id}>{category.name}</option>
             ))}
         </select>
+
+
+
+        </div>
+              <div className="mb-2">
+                <label className="block mb-2">Properties</label>
+                <button 
+                
+                onClick={addProperty}
+                type="button" className="btn-default text-sm mb-3">
+              Add New Properties
+                </button>
+              {properties.length >0 && properties.map((property,index)=>(
+                <div className="flex gap-1 mb-2">
+                  <input className="mb-0" type="text" value={property.name}
+                  onChange={ev=>handlePropertyNameChange(index,property, ev.target.value)}
+                  placeholder="Property name" />
+                  <input className="mb-0" type="text" 
+                  onChange={ev=>handlePropertyvaluesChange(index,property, ev.target.value)}
+                  value={property.values} 
+                  placeholder="Property value" />
+                  <button
+                  type="button"
+                  onClick={()=>removeProperty(index)}
+                  className="btn-default">
+                    Remove
+                  </button>
+
+
+                </div>
+              ))}
+
+
+              </div>
+
+        
         <button type="submit" className="btn-primary py-1">
           {" "}
           Save
