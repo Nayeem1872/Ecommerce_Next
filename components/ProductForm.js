@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 
 import { useRouter } from "next/router";
@@ -11,19 +11,30 @@ export default function ProductForm({
   price: existingPrice,
   description: existingDescription,
   images: existingImages,
+  category: assignedcategory,
 }) {
   const [title, setTitle] = useState(existingTitle || "");
+  const [category,setCategory]= useState(assignedcategory || '')
   const [description, setDescription] = useState(existingDescription || "");
   const [price, setPrice] = useState(existingPrice || "");
   const [images,setImages] = useState(existingImages || []);
   const [isUploading, setIsUploading] = useState (false)
 
   const [goToProduct, setGoToProducts] = useState(false);
+  const [categories, setCategories] = useState([])
   const router = useRouter();
+
+  useEffect(()=>{
+axios.get('/api/categories').then(result=>{
+  setCategories(result.data);
+})
+  },[])
+
+
   async function saveProduct(ev) {
     ev.preventDefault();
     const data = {
-      title,description,price,images
+      title,description,price,images,category
     };
     if (_id) {
       //update
@@ -71,6 +82,23 @@ function updateImageOrder(imagess){
         value={title}
         onChange={(ev) => setTitle(ev.target.value)}
       />
+      <label>Category</label>
+      <select value={category} onChange={ev=>setCategory(ev.target.value)}>
+    <option value="">Undefine </option>
+    {categories.length>0 && categories.map(c=>(
+
+      <option value={c._id}>{c.name}</option>
+
+    ))}
+
+
+
+      </select>
+
+
+
+
+
       <label>Price</label>
       <input
         type="number"
