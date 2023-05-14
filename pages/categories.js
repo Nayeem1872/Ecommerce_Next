@@ -1,9 +1,11 @@
 import Layout from "@/components/Layout";
 import axios from "axios";
 import { useEffect, useState } from "react";
+import { withSwal } from "react-sweetalert2";
 
-export default function Categories() {
-    const[editCat, setEditCat] = useState (null)
+
+function Categories({swal}){
+  const[editCat, setEditCat] = useState (null)
   const [name, setName] = useState("");
   const [parentCategory, setParentCategory] = useState("");
   const [categories, setCategories] = useState([]);
@@ -39,6 +41,22 @@ export default function Categories() {
     setEditCat(category)
     setName (category.name)
     setParentCategory(category.parent?._id)
+  }
+  function deleteCategory (category){
+    swal.fire({
+      title:'Are you sure???',
+      text:`Do you want to delete ${category.name}?`,
+      showCancelButton: true,
+      cancelButtonText:'Cancel',
+      confirmButtonText:'Yes,Delete!',
+      reverseButton:true,
+    }).then(async result =>{
+      if(result.isConfirmed){
+        const {_id}=category;
+       await axios.delete('/api/categories?_id='+_id);
+       fetchCat()
+      }
+    })
   }
 
   return (
@@ -93,7 +111,9 @@ export default function Categories() {
                     {" "}
                     Edit
                   </button>
-                  <button className="btn-primary"> Delete</button>
+                  <button 
+                  onClick={()=>deleteCategory(category)}
+                  className="btn-primary"> Delete</button>
                 </td>
               </tr>
             ))}
@@ -101,4 +121,11 @@ export default function Categories() {
       </table>
     </Layout>
   );
+
+
+
 }
+
+export default withSwal (({swal},ref)=> (
+   <Categories swal={swal} />
+))
