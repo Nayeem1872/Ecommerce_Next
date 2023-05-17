@@ -22,6 +22,6 @@ export default function Home() {
 
     </div>
 
-  Test
+ 
  </Layout>
 }
